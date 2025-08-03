@@ -31,10 +31,10 @@ const refreshAll = () => {
         res.json().then(t => {
             const technology = t.technology;
             const values = Object.values(t).flatMap(x => x).map(x => x.name).join("<br/>");
-            document.getElementById("subtopics").innerHTML = `<h2>Topics:</h2>${values}`;
+            document.getElementById("subtopics").innerHTML = `${values}`;
         });
     });
-        fetch("/trends").then(res => {
+    fetch("/trends").then(res => {
         console.log("fetched trends");
         res.json().then(t => {
             const values = t.join("<br/>");
@@ -45,12 +45,12 @@ const refreshAll = () => {
     setTimeout(refreshAll, 5000);
 };
 const refreshMessages = () => {
-        fetch("/messages").then(res => {
-        console.log("fetched messages");
+    fetch("/messages").then(res => {
+        // console.log("fetched messages");
         res.text().then(t => document.getElementById("messages").innerHTML = t);
     });
     setTimeout(refreshMessages, 40);
-    };
+};
 
 window.onload = () => {
     refreshAll();
@@ -63,12 +63,12 @@ window.onload = () => {
         <h1>Bluesky Monitor</h1>
         <div id="currentSummary"></div>
         <h2>Trends:</h2> <div id="trends"></div>
-        <div id="subtopics"></div>
+        <h2>Topics:</h2><div id="subtopics"></div>
         <h2>Messages:</h2> <div id="messages"></div>
         </div>
     </body>
     </html>"#,
-    ) // todo proper html response
+    )
 }
 
 #[get("/summary")]
