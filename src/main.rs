@@ -31,14 +31,23 @@ const refreshAll = () => {
         res.json().then(t => {
             const technology = t.technology;
             const values = Object.values(t).flatMap(x => x).map(x => x.name).join("<br/>");
-            document.getElementById("subtopics").innerHTML = `<h2>Topics:</h2><br/>${values}`;
+            document.getElementById("subtopics").innerHTML = `<h2>Topics:</h2>${values}`;
         });
     });
+
     setTimeout(refreshAll, 5000);
 };
+const refreshMessages = () => {
+        fetch("/messages").then(res => {
+        console.log("fetched messages");
+        res.text().then(t => document.getElementById("messages").textContent = t);
+    });
+    setTimeout(refreshMessages, 40);
+    };
 
 window.onload = () => {
     refreshAll();
+    refreshMessages();
 };
         </script>
     </head>
@@ -47,6 +56,7 @@ window.onload = () => {
         <h1>Bluesky Monitor</h1>
         <div id="currentSummary"></div>
         <div id="subtopics"></div>
+        <h2>Messages:</h2> <div id="messages"></div>
         </div>
     </body>
     </html>"#,
@@ -68,6 +78,19 @@ async fn subtopics() -> Result<String> {
     return result2;
 }
 
+#[get("/messages")]
+async fn messagesList() -> Result<String> {
+    let con = redisCon();
+    let result: Result<Vec<String>> = con?.lrange("messagesList", 0, 30).or(Ok(vec![]));
+    println!("getting result");
+    return result
+        .inspect(|x| {
+            println!("returning {}", x.join(" "));
+        })
+        .map(|x| x.join(" "));
+    // return result;
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Running httpserver");
@@ -76,6 +99,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(summary)
             .service(subtopics)
+            .service(messagesList)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
