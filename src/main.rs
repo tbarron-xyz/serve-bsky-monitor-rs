@@ -34,13 +34,20 @@ const refreshAll = () => {
             document.getElementById("subtopics").innerHTML = `<h2>Topics:</h2>${values}`;
         });
     });
+        fetch("/trends").then(res => {
+        console.log("fetched trends");
+        res.json().then(t => {
+            const values = t.join("<br/>");
+            document.getElementById("trends").innerHTML = `${values}`;
+        });
+    });
 
     setTimeout(refreshAll, 5000);
 };
 const refreshMessages = () => {
         fetch("/messages").then(res => {
         console.log("fetched messages");
-        res.text().then(t => document.getElementById("messages").textContent = t);
+        res.text().then(t => document.getElementById("messages").innerHTML = t);
     });
     setTimeout(refreshMessages, 40);
     };
@@ -55,6 +62,7 @@ window.onload = () => {
         <div id="container">
         <h1>Bluesky Monitor</h1>
         <div id="currentSummary"></div>
+        <h2>Trends:</h2> <div id="trends"></div>
         <div id="subtopics"></div>
         <h2>Messages:</h2> <div id="messages"></div>
         </div>
@@ -87,8 +95,16 @@ async fn messagesList() -> Result<String> {
         .inspect(|x| {
             println!("returning {}", x.join(" "));
         })
-        .map(|x| x.join(" "));
+        .map(|x| x.join("<br/>"));
     // return result;
+}
+
+#[get("/trends")]
+async fn trends() -> Result<String> {
+    let con = redisCon();
+    let result = con?.get("currentTrends").or(Ok("".to_string()));
+
+    return result;
 }
 
 #[actix_web::main]
@@ -100,6 +116,7 @@ async fn main() -> std::io::Result<()> {
             .service(summary)
             .service(subtopics)
             .service(messagesList)
+            .service(trends)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
