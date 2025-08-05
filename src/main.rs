@@ -18,7 +18,7 @@ async fn index() -> impl Responder {
     <head>
     <style>
         #container { width: 600px; float: left }
-        #right-container { width: 400px; float: right }
+        #right-container { width: 300px; float: right }
     </style>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -156,40 +156,40 @@ window.onload = () => {
     // <div id="news"></div>
 }
 
-#[get("/summary")]
-async fn summary() -> Result<String> {
-    let con = redisCon();
-    let result = con?.get("currentSummary").or(Ok("".to_string()));
-    return result;
-}
+// #[get("/summary")]
+// async fn summary() -> Result<String> {
+//     let con = redisCon();
+//     let result = con?.get("currentSummary").or(Ok("".to_string()));
+//     return result;
+// }
 
-#[get("/subtopics")]
-async fn subtopics() -> Result<String> {
-    let con = redisCon();
-    let result = con?.get("subtopics").or(Ok("".to_string()));
-    return result;
-}
+// #[get("/subtopics")]
+// async fn subtopics() -> Result<String> {
+//     let con = redisCon();
+//     let result = con?.get("subtopics").or(Ok("".to_string()));
+//     return result;
+// }
 
-#[get("/messages")]
-async fn messagesList() -> Result<String> {
-    return Ok("".to_string()); // they can get messages themselves from jetstream
-    let con = redisCon();
-    let result: Result<Vec<String>> = con?.lrange("messagesList", 0, 30).or(Ok(vec![]));
-    println!("getting result");
-    return result
-        .inspect(|x| {
-            println!("returning {}", x.join(" "));
-        })
-        .map(|x| x.join("<br/>"));
-}
+// #[get("/messages")]
+// async fn messagesList() -> Result<String> {
+//     return Ok("".to_string()); // they can get messages themselves from jetstream
+//     let con = redisCon();
+//     let result: Result<Vec<String>> = con?.lrange("messagesList", 0, 30).or(Ok(vec![]));
+//     println!("getting result");
+//     return result
+//         .inspect(|x| {
+//             println!("returning {}", x.join(" "));
+//         })
+//         .map(|x| x.join("<br/>"));
+// }
 
-#[get("/trends")]
-async fn trends() -> Result<String> {
-    let con = redisCon();
-    let result = con?.get("currentTrends").or(Ok("".to_string()));
+// #[get("/trends")]
+// async fn trends() -> Result<String> {
+//     let con = redisCon();
+//     let result = con?.get("currentTrends").or(Ok("".to_string()));
 
-    return result;
-}
+//     return result;
+// }
 
 #[get("/news")]
 async fn news() -> Result<String> {
@@ -205,10 +205,10 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(index)
-            .service(summary)
-            .service(subtopics)
-            .service(messagesList)
-            .service(trends)
+            // .service(summary)
+            // .service(subtopics)
+            // .service(messagesList)
+            // .service(trends)
             .service(news)
     })
     .bind(("127.0.0.1", 8080))?
