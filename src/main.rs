@@ -17,13 +17,21 @@ async fn index() -> impl Responder {
         r#"<html>
     <head>
     <style>
-        #container { width: 800px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; }
+        body {     background: #333333;
+            color: #cccccc;
+            font-family: Helvetica Neue, Arial;
+        }
+        #newspaper-title { font-family: math; margin-bottom: 0; }
+        #container { width: 800px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; padding: 10px; }
         #right-container { width: 250px; float: right }
         #coverPhoto { width: 350px; float: right; }
-        #coverStory { display: inline-block; }
+        #coverStory { display: inline-block; font-size; 0.95em; padding-bottom: 10px; }
         .commentContainer { padding-top: 13px }
-        .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; }
+        .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
         #messages { height: 600px; overflow: hidden; }
+        #time { float: right; }
+        .storyP { font-size: 0.9em }
+        .story { border-top: 1px dashed; padding-bottom: 10px; }
     </style>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -98,24 +106,40 @@ const refreshAll = () => {
     if (document.getElementById("refresh").checked) {
         fetch("/news").then(res => {
             res.json().then(j => {
-                // document.getElementById("news").innerHTML = JSON.stringify(j);
-                console.log(j);
-                document.getElementById("newspaper-title").textContent = j.newspaperName;
-                for (let i of [0,1,2,3,4]) {
-                    let v = j.topics[i];
-                    try {
-                        document.getElementById(`story${i+1}`).innerHTML = `<h3>${v.headline}</h3>${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}
-                        <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user"></i>${v.skepticalComment}</div></div>`; 
-                    } catch (e) { }
-                }
-                document.getElementById("coverStory").innerHTML = `<img id="coverPhoto"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>`;
-                document.getElementById("coverPhoto").src = document.imageUrl;
+                if (JSON.stringify(j) != localStorage.getItem("state")) {
+                    // document.getElementById("news").innerHTML = JSON.stringify(j);
+                    console.log(j);
+                    document.getElementById("newspaper-title").textContent = j.newspaperName;
+                    for (let i of [0,1,2,3,4]) {
+                        let v = j.topics[i];
+                        try {
+                            document.getElementById(`story${i+1}`).innerHTML = `<h3>${v.headline}</h3>
+                            <details>
+                                <summary>${v.oneLineSummary}</summary>
+                                <p class="storyP">${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}</p>
+                            </details>
+                            
+                            <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user"></i>${v.skepticalComment}</div></div>`; 
+                        } catch (e) { }
+                    }
+                    document.getElementById("coverStory").innerHTML = `<img id="coverPhoto"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>`;
+                    document.getElementById("coverPhoto").src = document.imageUrl;
 
+
+                    localStorage.setItem("state", JSON.stringify(j));
+                }
                 fetch("/img.jpg").then(res => {
                     res.blob().then(blob => {
                         const imageUrl = URL.createObjectURL(blob);
                         document.imageUrl = imageUrl;
                         document.getElementById("coverPhoto").src = imageUrl;
+                    });
+                });
+                fetch("/time").then(res => {
+                    res.text().then(t => {
+                        const i = parseInt(t);
+                        const d = new Date(i).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+                        document.getElementById("time").textContent = d;
                     });
                 });
             });
@@ -132,6 +156,7 @@ const refreshMessages = () => {
 };
 
 window.onload = () => {
+    localStorage.setItem("state","");
     refreshAll();
     // refreshMessages();
 };
@@ -139,9 +164,10 @@ window.onload = () => {
     </head>
     <body>
         <div id="container" style>
-            <h1 id="newspaper-title">Bluesky Monitor</h1>
+            <div id="time"></div>
+            <h1 id="newspaper-title"></h1><hr/>
             <div id="coverStory"></div>
-            <div id="story1"></div><div id="story2"></div><div id="story3"></div><div id="story4"></div><div id="story5"></div>
+            <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>
             <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
         </div>
         <div id="right-container"><div id="messages"></div><i class="fa fa-refresh"></i><input type="checkbox" checked id="messagesRefresh"/></div>
@@ -216,6 +242,14 @@ async fn news() -> Result<String> {
     return result;
 }
 
+#[get("/time")]
+async fn time() -> Result<String> {
+    let con = redisCon();
+    let time = con?.get("newsTopicsTime").or(Ok(0.to_string()));
+
+    return time;
+}
+
 #[get("/img.jpg")]
 async fn img() -> Result<HttpResponse> {
     let con = redisCon();
@@ -239,6 +273,7 @@ async fn main() -> std::io::Result<()> {
             // .service(trends)
             .service(news)
             .service(img)
+            .service(time)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
