@@ -21,15 +21,15 @@ async fn index() -> impl Responder {
             color: #cccccc;
             font-family: Helvetica Neue, Arial;
         }
-        #newspaper-title { font-family: math; margin-bottom: 0; }
+        .newspaper-title { font-family: math; margin-bottom: 0; }
         #container { width: 800px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; padding: 10px; }
         #right-container { width: 250px; float: right }
-        #coverPhoto { width: 350px; float: right; }
+        .coverPhoto { width: 350px; float: right; }
         #coverStory { display: inline-block; font-size; 0.95em; padding-bottom: 10px; }
         .commentContainer { padding-top: 13px }
         .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
         #messages { height: 600px; overflow: hidden; }
-        #time { float: right; }
+        .time { float: right; }
         .storyP { font-size: 0.9em }
         .story { border-top: 1px dashed; padding-bottom: 10px; }
     </style>
@@ -105,41 +105,67 @@ jetstream.start();
 const refreshAll = () => {
     if (document.getElementById("refresh").checked) {
         fetch("/news").then(res => {
-            res.json().then(j => {
-                if (JSON.stringify(j) != localStorage.getItem("state")) {
-                    // document.getElementById("news").innerHTML = JSON.stringify(j);
-                    console.log(j);
-                    document.getElementById("newspaper-title").textContent = j.newspaperName;
-                    for (let i of [0,1,2,3,4]) {
-                        let v = j.topics[i];
-                        try {
-                            document.getElementById(`story${i+1}`).innerHTML = `<h3>${v.headline}</h3>
-                            <details>
-                                <summary>${v.oneLineSummary}</summary>
-                                <p class="storyP">${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}</p>
-                            </details>
-                            
-                            <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user"></i>${v.skepticalComment}</div></div>`; 
-                        } catch (e) { }
+            res.json().then(list => {
+                if (JSON.stringify(list) != localStorage.getItem("state")) {
+                    for (let i of list.keys()) {
+                        const j = list[i];
+                        document.getElementById(`issue${i}`).innerHTML = `
+    
+    <div class="time" id="time${i}"></div>
+    <h1 class="newspaper-title" id="newspaper-title${i}">${j.newspaperName}</h1><hr/>
+    <div class="coverStory">
+        <img class="coverPhoto" id="coverPhoto${i}"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>
+    </div>
+    ${j.topics.map(v => `<div class="story">
+        <h3>${v.headline}</h3>
+        <details>
+            <summary>${v.oneLineSummary}</summary>
+            <p class="storyP">${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}</p>
+        </details>
+        
+        <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.skepticalComment}</div></div>
+    </div>`).join("")}
+    <hr/><br/>
+                        `;
                     }
-                    document.getElementById("coverStory").innerHTML = `<img id="coverPhoto"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>`;
-                    document.getElementById("coverPhoto").src = document.imageUrl;
-
-
-                    localStorage.setItem("state", JSON.stringify(j));
+                    localStorage.setItem("state", JSON.stringify(list));
                 }
+
+                // const j = list[0];
+                // if (JSON.stringify(j) != localStorage.getItem("state")) {
+                //     // document.getElementById("news").innerHTML = JSON.stringify(j);
+                //     console.log(j);
+                //     document.getElementById("newspaper-title").textContent = j.newspaperName;
+                //     for (let i of [0,1,2,3,4]) {
+                //         let v = j.topics[i];
+                //         try {
+                //             document.getElementById(`story${i+1}`).innerHTML = `<h3>${v.headline}</h3>
+                //             <details>
+                //                 <summary>${v.oneLineSummary}</summary>
+                //                 <p class="storyP">${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}</p>
+                //             </details>
+                            
+                //             <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user"  style="padding-right: 5px;"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.skepticalComment}</div></div>`; 
+                //         } catch (e) { }
+                //     }
+                //     document.getElementById("coverStory").innerHTML = `<img id="coverPhoto"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>`;
+                //     document.getElementById("coverPhoto").src = document.imageUrl;
+                // }
+
                 fetch("/img.jpg").then(res => {
                     res.blob().then(blob => {
                         const imageUrl = URL.createObjectURL(blob);
                         document.imageUrl = imageUrl;
-                        document.getElementById("coverPhoto").src = imageUrl;
+                        document.getElementById("coverPhoto0").src = imageUrl;
                     });
                 });
                 fetch("/time").then(res => {
-                    res.text().then(t => {
-                        const i = parseInt(t);
-                        const d = new Date(i).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
-                        document.getElementById("time").textContent = d;
+                    res.json().then(t => {
+                        for (let idx of t.keys()) {
+                            const i = parseInt(t[idx]);
+                            const d = new Date(i).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+                            document.getElementById(`time${idx}`).textContent = d;
+                        }
                     });
                 });
             });
@@ -164,16 +190,18 @@ window.onload = () => {
     </head>
     <body>
         <div id="container" style>
-            <div id="time"></div>
+            <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
+            <!--<div id="time"></div>
             <h1 id="newspaper-title"></h1><hr/>
             <div id="coverStory"></div>
-            <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>
+            <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>-->
             <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
         </div>
         <div id="right-container"><div id="messages"></div><i class="fa fa-refresh"></i><input type="checkbox" checked id="messagesRefresh"/></div>
     </body>
     </html>"#,
     )
+    //        Maybe later... <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     // fetch("/summary").then(res => {
     //     console.log("fetched summary");
     //     res.text().then(t => document.getElementById("currentSummary").textContent = t);
@@ -223,7 +251,7 @@ window.onload = () => {
 //         .inspect(|x| {
 //             println!("returning {}", x.join(" "));
 //         })
-//         .map(|x| x.join("<br/>"));
+//         .map(|x| "[" + x.join(",") + "]");
 // }
 
 // #[get("/trends")]
@@ -237,17 +265,32 @@ window.onload = () => {
 #[get("/news")]
 async fn news() -> Result<String> {
     let con = redisCon();
-    let result = con?.get("newsTopics").or(Ok("".to_string()));
+    let result: Result<Vec<String>> = con?.lrange("newsList", 0, 5).or(Ok(vec![]));
+    // println!("getting result");
+    return result
+        .inspect(|x| {
+            // println!("returning {}", x.join(" "));
+        })
+        .map(|x| format!("[{}]", x.join(",")));
 
-    return result;
+    // let result = con?.get("newsTopics").or(Ok("".to_string()));
+
+    // return result;
 }
 
 #[get("/time")]
 async fn time() -> Result<String> {
     let con = redisCon();
-    let time = con?.get("newsTopicsTime").or(Ok(0.to_string()));
+    let result: Result<Vec<String>> = con?.lrange("timeList", 0, 5).or(Ok(vec![]));
+    // println!("getting result");
+    return result
+        .inspect(|x| {
+            // println!("returning {}", x.join(" "));
+        })
+        .map(|x| format!("[{}]", x.join(",")));
+    // let time = con?.get("newsTopicsTime").or(Ok(0.to_string()));
 
-    return time;
+    // return time;
 }
 
 #[get("/img.jpg")]
