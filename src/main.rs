@@ -1,5 +1,4 @@
-use actix_web::{error, get, App, Error, HttpResponse, HttpServer, Responder, Result};
-// use redis::Client;
+use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use redis::Commands;
 
 fn redisCon() -> Result<redis::Connection, Error> {
@@ -22,16 +21,28 @@ async fn index() -> impl Responder {
             font-family: Helvetica Neue, Arial;
         }
         .newspaper-title { font-family: math; margin-bottom: 0; }
-        #container { width: 800px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; padding: 10px; }
+        #container { width: 1000px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; padding: 10px; }
         #right-container { width: 250px; float: right }
         .coverPhoto { width: 350px; float: right; }
-        #coverStory { display: inline-block; font-size; 0.95em; padding-bottom: 10px; }
+        .photo { padding-left: 20px; }
+        .coverStory { display: inline-block; font-size: 0.95em; padding-bottom: 10px; overflow: auto; }
         .commentContainer { padding-top: 13px }
         .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
         #messages { height: 600px; overflow: hidden; }
         .time { float: right; }
         .storyP { font-size: 0.9em }
-        .story { border-top: 1px dashed; padding-bottom: 10px; }
+        .story { border-top: 1px dashed; padding-bottom: 10px; padding-top: 10px; overflow: auto; }
+        .gridContainer { width: 223px;
+            height: 223px;
+            overflow: hidden;
+            float: right; }
+        .gridimg { width: 446px }
+        .grid0 { }
+        .grid1 { margin-left: -223px; }
+        .grid2 { margin-top: -223px; }
+        .grid3 { margin-left: -223px; margin-top: -223px; }
+        .grid4 { display: none; }
+        .grid5 { display: none; }
     </style>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -114,9 +125,10 @@ const refreshAll = () => {
     <div class="time" id="time${i}"></div>
     <h1 class="newspaper-title" id="newspaper-title${i}">${j.newspaperName}</h1><hr/>
     <div class="coverStory">
-        <img class="coverPhoto" id="coverPhoto${i}"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>
+        <img class="photo coverPhoto" id="coverPhoto${i}"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>
     </div>
-    ${j.topics.map(v => `<div class="story">
+    ${j.topics.map((v,idx) => `<div class="story">
+        <div class="gridContainer"><img src="/grid${i}.jpg" class="gridimg grid${idx}"></div>
         <h3>${v.headline}</h3>
         <details>
             <summary>${v.oneLineSummary}</summary>
@@ -126,39 +138,19 @@ const refreshAll = () => {
         <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.skepticalComment}</div></div>
     </div>`).join("")}
     <hr/><br/>
-                        `;
+                        `;               
+                        fetch(`/img${i}.jpg`).then(res => {
+                            res.blob().then(blob => {
+                                if (blob.size > 0) {
+                                    const imageUrl = URL.createObjectURL(blob);
+                                    document.imageUrl = imageUrl;
+                                    document.getElementById(`coverPhoto${i}`).src = imageUrl;
+                                }
+                            });
+                        });
                     }
                     localStorage.setItem("state", JSON.stringify(list));
                 }
-
-                // const j = list[0];
-                // if (JSON.stringify(j) != localStorage.getItem("state")) {
-                //     // document.getElementById("news").innerHTML = JSON.stringify(j);
-                //     console.log(j);
-                //     document.getElementById("newspaper-title").textContent = j.newspaperName;
-                //     for (let i of [0,1,2,3,4]) {
-                //         let v = j.topics[i];
-                //         try {
-                //             document.getElementById(`story${i+1}`).innerHTML = `<h3>${v.headline}</h3>
-                //             <details>
-                //                 <summary>${v.oneLineSummary}</summary>
-                //                 <p class="storyP">${v.newsStoryFirstParagraph}<br/>${v.newsStorySecondParagraph}</p>
-                //             </details>
-                            
-                //             <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user"  style="padding-right: 5px;"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.skepticalComment}</div></div>`; 
-                //         } catch (e) { }
-                //     }
-                //     document.getElementById("coverStory").innerHTML = `<img id="coverPhoto"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>`;
-                //     document.getElementById("coverPhoto").src = document.imageUrl;
-                // }
-
-                fetch("/img.jpg").then(res => {
-                    res.blob().then(blob => {
-                        const imageUrl = URL.createObjectURL(blob);
-                        document.imageUrl = imageUrl;
-                        document.getElementById("coverPhoto0").src = imageUrl;
-                    });
-                });
                 fetch("/time").then(res => {
                     res.json().then(t => {
                         for (let idx of t.keys()) {
@@ -202,70 +194,12 @@ window.onload = () => {
     </html>"#,
     )
     //        Maybe later... <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    // fetch("/summary").then(res => {
-    //     console.log("fetched summary");
-    //     res.text().then(t => document.getElementById("currentSummary").textContent = t);
-    // });
-    // fetch("/subtopics").then(res => {
-    //     console.log("fetched subtopics");
-    //     res.json().then(t => {
-    //         const technology = t.technology;
-    //         const values = Object.values(t).flatMap(x => x).map(x => x.name).join("<br/>");
-    //         document.getElementById("subtopics").innerHTML = `${values}`;
-    //     });
-    // });
-    // fetch("/trends").then(res => {
-    //     console.log("fetched trends");
-    //     res.json().then(t => {
-    //         const values = t.join("<br/>");
-    //         document.getElementById("trends").innerHTML = `${values}`;
-    //     });
-    // });
-    // <div id="currentSummary"></div>
-    // <h2>Trends:</h2> <div id="trends"></div>
-    // <h2>Topics:</h2><div id="subtopics"></div>
-    // <div id="news"></div>
 }
-
-// #[get("/summary")]
-// async fn summary() -> Result<String> {
-//     let con = redisCon();
-//     let result = con?.get("currentSummary").or(Ok("".to_string()));
-//     return result;
-// }
-
-// #[get("/subtopics")]
-// async fn subtopics() -> Result<String> {
-//     let con = redisCon();
-//     let result = con?.get("subtopics").or(Ok("".to_string()));
-//     return result;
-// }
-
-// #[get("/messages")]
-// async fn messagesList() -> Result<String> {
-//     return Ok("".to_string()); // they can get messages themselves from jetstream
-//     let con = redisCon();
-//     let result: Result<Vec<String>> = con?.lrange("messagesList", 0, 30).or(Ok(vec![]));
-//     println!("getting result");
-//     return result
-//         .inspect(|x| {
-//             println!("returning {}", x.join(" "));
-//         })
-//         .map(|x| "[" + x.join(",") + "]");
-// }
-
-// #[get("/trends")]
-// async fn trends() -> Result<String> {
-//     let con = redisCon();
-//     let result = con?.get("currentTrends").or(Ok("".to_string()));
-
-//     return result;
-// }
 
 #[get("/news")]
 async fn news() -> Result<String> {
     let con = redisCon();
-    let result: Result<Vec<String>> = con?.lrange("newsList", 0, 5).or(Ok(vec![]));
+    let result: Result<Vec<String>> = con?.lrange("newsList", 0, 4).or(Ok(vec![]));
     // println!("getting result");
     return result
         .inspect(|x| {
@@ -281,7 +215,7 @@ async fn news() -> Result<String> {
 #[get("/time")]
 async fn time() -> Result<String> {
     let con = redisCon();
-    let result: Result<Vec<String>> = con?.lrange("timeList", 0, 5).or(Ok(vec![]));
+    let result: Result<Vec<String>> = con?.lrange("timeList", 0, 4).or(Ok(vec![]));
     // println!("getting result");
     return result
         .inspect(|x| {
@@ -294,7 +228,7 @@ async fn time() -> Result<String> {
 }
 
 #[get("/img.jpg")]
-async fn img() -> Result<HttpResponse> {
+async fn img0() -> Result<HttpResponse> {
     let con = redisCon();
     let result = con?
         .get("img")
@@ -302,6 +236,32 @@ async fn img() -> Result<HttpResponse> {
         .or(Ok(HttpResponse::Ok().body("".to_string())));
 
     return result;
+}
+
+#[get("/grid{id}.jpg")]
+async fn grid(info: web::Path<(u32)>) -> Result<HttpResponse> {
+    let info = info.into_inner();
+    let id = info;
+    let con = redisCon();
+    let result: Result<Vec<u8>> = con?.lindex("imgGridList", id as isize).or(Ok(vec![]));
+    return result
+        .map(|x: Vec<u8>| HttpResponse::Ok().content_type("image/jpeg").body(x))
+        .or(Ok(HttpResponse::Ok().body("".to_string())));
+
+    // return result;
+}
+
+#[get("/img{id}.jpg")]
+async fn img(info: web::Path<(u32)>) -> Result<HttpResponse> {
+    let info = info.into_inner();
+    let id = info;
+    let con = redisCon();
+    let result: Result<Vec<u8>> = con?.lindex("imgList", id as isize).or(Ok(vec![]));
+    return result
+        .map(|x: Vec<u8>| HttpResponse::Ok().content_type("image/jpeg").body(x))
+        .or(Ok(HttpResponse::Ok().body("".to_string())));
+
+    // return result;
 }
 
 #[actix_web::main]
@@ -317,6 +277,7 @@ async fn main() -> std::io::Result<()> {
             .service(news)
             .service(img)
             .service(time)
+            .service(grid)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
