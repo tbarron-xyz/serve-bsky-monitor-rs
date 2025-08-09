@@ -19,13 +19,15 @@ async fn index() -> impl Responder {
         body {     background: #333333;
             color: #cccccc;
             font-family: Helvetica Neue, Arial;
+            margin: 0; padding: 0;
         }
         .newspaper-title { font-family: math; margin-bottom: 0; }
-        #container { width: 1000px; float: left; display: inline-block; max-width: calc(100% - 300px); min-width: 350px; padding: 10px; }
-        #right-container { width: 250px; float: right }
+        #container { width: 1000px; float: left; display: inline-block; max-width: 100%; min-width: 350px; padding: 10px;     box-sizing: border-box; }
+        #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; }
+        #right-container { display: inline-block; width: 250px; float: right }
         .coverPhoto { width: 350px; float: right; }
         .photo { padding-left: 20px; }
-        .coverStory { display: inline-block; font-size: 0.95em; padding-bottom: 10px; overflow: auto; }
+        .coverStory { display: inline-block; font-size: 0.95em; padding-bottom: 10px; overflow: auto; max-width: 100%; }
         .commentContainer { padding-top: 13px }
         .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
         #messages { height: 600px; overflow: hidden; }
@@ -181,13 +183,15 @@ window.onload = () => {
         </script>
     </head>
     <body>
-        <div id="container" style>
-            <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
-            <!--<div id="time"></div>
-            <h1 id="newspaper-title"></h1><hr/>
-            <div id="coverStory"></div>
-            <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>-->
-            <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
+        <div id="left-container">
+            <div id="container" style>
+                <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
+                <!--<div id="time"></div>
+                <h1 id="newspaper-title"></h1><hr/>
+                <div id="coverStory"></div>
+                <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>-->
+                <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
+            </div>
         </div>
         <div id="right-container"><div id="messages"></div><i class="fa fa-refresh"></i><input type="checkbox" checked id="messagesRefresh"/></div>
     </body>
