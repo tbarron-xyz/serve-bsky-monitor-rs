@@ -127,7 +127,7 @@ const refreshAll = () => {
     <div class="coverStory">
         <img class="photo coverPhoto" id="coverPhoto${i}"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>
     </div>
-    ${j.topics.map((v,idx) => `<div class="story">
+    ${j.topics.filter((v,idx) => idx <= 3).map((v,idx) => `<div class="story">
         <div class="gridContainer"><img src="/grid${i}.jpg" class="gridimg grid${idx}"></div>
         <h3>${v.headline}</h3>
         <details>
