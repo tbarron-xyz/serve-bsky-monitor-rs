@@ -22,7 +22,7 @@ async fn index() -> impl Responder {
             margin: 0; padding: 0;
         }
         .newspaper-title { font-family: math; margin-bottom: 0; }
-        #container { width: 1000px; float: left; display: inline-block; max-width: 100%; min-width: 350px; padding: 10px;     box-sizing: border-box; }
+        #container { width: 1000px; max-width: 100%; min-width: 350px; padding: 10px; box-sizing: border-box; margin: auto; }
         #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; }
         #right-container { display: inline-block; width: 250px; float: right }
         .coverPhoto { width: 350px; float: right; }
@@ -45,6 +45,12 @@ async fn index() -> impl Responder {
         .grid3 { margin-left: -223px; margin-top: -223px; }
         .grid4 { display: none; }
         .grid5 { display: none; }
+        #archive-link { padding: 10px;
+                    margin: 0px 20px 20px 20px;
+                    border: white solid 1px;
+                    border-radius:  4px;
+                    text-align: center;
+                    background:  #444; }
     </style>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -130,7 +136,7 @@ const refreshAll = () => {
         <img class="photo coverPhoto" id="coverPhoto${i}"/><h2>${j.frontPageHeadline}</h2><p>${j.frontPageArticle}</p>
     </div>
     ${j.topics.filter((v,idx) => idx <= 3).map((v,idx) => `<div class="story">
-        <div class="gridContainer"><img src="/grid${i}.jpg" class="gridimg grid${idx}"></div>
+        <div class="gridContainer"><img src="/grid${i}.jpg?${Date.now()}" class="gridimg grid${idx}"></div>
         <h3>${v.headline}</h3>
         <details>
             <summary>${v.oneLineSummary}</summary>
@@ -186,10 +192,7 @@ window.onload = () => {
         <div id="left-container">
             <div id="container" style>
                 <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
-                <!--<div id="time"></div>
-                <h1 id="newspaper-title"></h1><hr/>
-                <div id="coverStory"></div>
-                <div class="story" id="story1"></div><div class="story" id="story2"></div><div class="story" id="story3"></div><div class="story" id="story4"></div><div class="story" id="story5"></div>-->
+                <div id="archive-link">Subscribe for access to the full historical archive.</div>
                 <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
             </div>
         </div>
