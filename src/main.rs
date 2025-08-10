@@ -15,45 +15,46 @@ async fn index() -> impl Responder {
     HttpResponse::Ok().content_type("text/html").body(
         r#"<html>
     <head>
-    <style>
-        body {     background: #333333;
-            color: #cccccc;
-            font-family: Helvetica Neue, Arial;
-            margin: 0; padding: 0;
-        }
-        .newspaper-title { font-family: math; margin-bottom: 0; }
-        #container { width: 1000px; max-width: 100%; min-width: 350px; padding: 10px; box-sizing: border-box; margin: auto; }
-        #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; }
-        #right-container { display: inline-block; width: 250px; float: right }
-        .coverPhoto { width: 350px; float: right; }
-        .photo { padding-left: 20px; }
-        .coverStory { display: inline-block; font-size: 0.95em; padding-bottom: 10px; overflow: auto; max-width: 100%; }
-        .commentContainer { padding-top: 13px }
-        .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
-        #messages { height: 600px; overflow: hidden; }
-        .time { float: right; }
-        .storyP { font-size: 0.9em }
-        .story { border-top: 1px dashed; padding-bottom: 10px; padding-top: 10px; overflow: auto; }
-        .gridContainer { width: 223px;
-            height: 223px;
-            overflow: hidden;
-            float: right; }
-        .gridimg { width: 446px }
-        .grid0 { }
-        .grid1 { margin-left: -223px; }
-        .grid2 { margin-top: -223px; }
-        .grid3 { margin-left: -223px; margin-top: -223px; }
-        .grid4 { display: none; }
-        .grid5 { display: none; }
-        #archive-link { padding: 10px;
-                    margin: 0px 20px 20px 20px;
-                    border: white solid 1px;
-                    border-radius:  4px;
-                    text-align: center;
-                    background:  #444; }
-    </style>
-      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <title>skylines.news</title>
+        <style>
+            body {     background: #333333;
+                color: #cccccc;
+                font-family: Helvetica Neue, Arial;
+                margin: 0; padding: 0;
+            }
+            .newspaper-title { font-family: math; margin-bottom: 0; }
+            #container { width: 1000px; max-width: 100%; min-width: 350px; padding: 10px; box-sizing: border-box; margin: auto; }
+            #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; }
+            #right-container { display: inline-block; width: 250px; float: right }
+            .coverPhoto { width: 350px; float: right; }
+            .photo { padding-left: 20px; }
+            .coverStory { display: inline-block; font-size: 0.95em; padding-bottom: 10px; overflow: auto; max-width: 100%; }
+            .commentContainer { padding-top: 13px }
+            .halfcomment { display: inline-block; width: 50%; margin: 0; padding: 0; font-size: 0.9em; }
+            #messages { height: 600px; overflow: hidden; }
+            .time { float: right; }
+            .storyP { font-size: 0.9em }
+            .story { border-top: 1px dashed; padding-bottom: 10px; padding-top: 10px; overflow: auto; }
+            .gridContainer { width: 223px;
+                height: 223px;
+                overflow: hidden;
+                float: right; }
+            .gridimg { width: 446px }
+            .grid0 { }
+            .grid1 { margin-left: -223px; }
+            .grid2 { margin-top: -223px; }
+            .grid3 { margin-left: -223px; margin-top: -223px; }
+            .grid4 { display: none; }
+            .grid5 { display: none; }
+            #archive-link { padding: 10px;
+                        margin: 0px 20px 20px 20px;
+                        border: white solid 1px;
+                        border-radius:  4px;
+                        text-align: center;
+                        background:  #444; }
+        </style>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <script>
 class Jetstream {
   endpoint = "jetstream1.us-east.bsky.network";
@@ -207,31 +208,22 @@ window.onload = () => {
 async fn news() -> Result<String> {
     let con = redisCon();
     let result: Result<Vec<String>> = con?.lrange("newsList", 0, 4).or(Ok(vec![]));
-    // println!("getting result");
     return result
         .inspect(|x| {
             // println!("returning {}", x.join(" "));
         })
         .map(|x| format!("[{}]", x.join(",")));
-
-    // let result = con?.get("newsTopics").or(Ok("".to_string()));
-
-    // return result;
 }
 
 #[get("/time")]
 async fn time() -> Result<String> {
     let con = redisCon();
     let result: Result<Vec<String>> = con?.lrange("timeList", 0, 4).or(Ok(vec![]));
-    // println!("getting result");
     return result
         .inspect(|x| {
             // println!("returning {}", x.join(" "));
         })
         .map(|x| format!("[{}]", x.join(",")));
-    // let time = con?.get("newsTopicsTime").or(Ok(0.to_string()));
-
-    // return time;
 }
 
 #[get("/img.jpg")]
@@ -254,8 +246,6 @@ async fn grid(info: web::Path<(u32)>) -> Result<HttpResponse> {
     return result
         .map(|x: Vec<u8>| HttpResponse::Ok().content_type("image/jpeg").body(x))
         .or(Ok(HttpResponse::Ok().body("".to_string())));
-
-    // return result;
 }
 
 #[get("/img{id}.jpg")]
@@ -267,8 +257,17 @@ async fn img(info: web::Path<(u32)>) -> Result<HttpResponse> {
     return result
         .map(|x: Vec<u8>| HttpResponse::Ok().content_type("image/jpeg").body(x))
         .or(Ok(HttpResponse::Ok().body("".to_string())));
+}
 
-    // return result;
+#[get("/ad.jpg")]
+async fn fakeAd() -> Result<HttpResponse> {
+    let con = redisCon();
+    let result = con?
+        .get("fakeAd")
+        .map(|x: Vec<u8>| HttpResponse::Ok().content_type("image/jpeg").body(x))
+        .or(Ok(HttpResponse::Ok().body("".to_string())));
+
+    return result;
 }
 
 #[actix_web::main]
@@ -277,14 +276,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(index)
-            // .service(summary)
-            // .service(subtopics)
-            // .service(messagesList)
-            // .service(trends)
             .service(news)
             .service(img)
             .service(time)
             .service(grid)
+            .service(fakeAd)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
