@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use redis::Commands;
 
