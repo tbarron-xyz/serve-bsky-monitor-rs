@@ -6,7 +6,7 @@ use redis::Commands;
 fn redisCon() -> Result<redis::Connection, Error> {
     let client = redis::Client::open("redis://127.0.0.1/")
         .map_err(|_err| error::ErrorInternalServerError("client fail"));
-    let mut con = client?
+    let con = client?
         .get_connection()
         .map_err(|_err| error::ErrorInternalServerError("con fail"));
     return con;
@@ -19,14 +19,14 @@ async fn index() -> impl Responder {
     <head>
         <title>skylines.news</title>
         <style>
-            body {     background: #333333;
+            body { background: #333333;
                 color: #cccccc;
                 font-family: Helvetica Neue, Arial;
                 margin: 0; padding: 0;
             }
             .newspaper-title { font-family: math; margin-bottom: 0; }
-            #container { width: 1000px; max-width: 100%; min-width: 350px; padding: 10px; box-sizing: border-box; margin: auto; }
-            #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; }
+            #container { width: 1000px; max-width: 100%; min-width: 350px; padding: 10px; box-sizing: border-box; margin: auto; position: relative; }
+            #left-container { display: inline-block; width: calc(100% - 250px); min-width: 350px; overflow: hidden; }
             #right-container { display: inline-block; width: 250px; float: right }
             .coverPhoto { width: 350px; float: right; }
             .photo { padding-left: 20px; }
@@ -54,6 +54,24 @@ async fn index() -> impl Responder {
                         border-radius:  4px;
                         text-align: center;
                         background:  #444; }
+            #leftad {
+                background-image: url("/ad.jpg");
+                width: 150px;
+                height: 300px;
+                position: absolute;
+                margin-left: -165px;
+                background-size: 300px;
+            }
+            #rightad {
+                position: absolute;
+                margin-right: -150px;
+                width: 150px;
+                height: 300px;
+                background-image: url("/ad.jpg");
+                background-size: 300px;
+                background-position: 150px;
+                right: 0px;
+            }
         </style>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -194,6 +212,8 @@ window.onload = () => {
     <body>
         <div id="left-container">
             <div id="container" style>
+                <div id="leftad"></div>
+                <div id="rightad"></div>
                 <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
                 <div id="archive-link">Subscribe for access to the full historical archive.</div>
                 <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
@@ -211,7 +231,7 @@ async fn news() -> Result<String> {
     let con = redisCon();
     let result: Result<Vec<String>> = con?.lrange("newsList", 0, 4).or(Ok(vec![]));
     return result
-        .inspect(|x| {
+        .inspect(|_x| {
             // println!("returning {}", x.join(" "));
         })
         .map(|x| format!("[{}]", x.join(",")));
@@ -222,7 +242,7 @@ async fn time() -> Result<String> {
     let con = redisCon();
     let result: Result<Vec<String>> = con?.lrange("timeList", 0, 4).or(Ok(vec![]));
     return result
-        .inspect(|x| {
+        .inspect(|_x| {
             // println!("returning {}", x.join(" "));
         })
         .map(|x| format!("[{}]", x.join(",")));
