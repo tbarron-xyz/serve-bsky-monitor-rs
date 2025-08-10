@@ -75,7 +75,9 @@ async fn index() -> impl Responder {
             .issue {
                 background: #222;
                 padding: 20px;
-                border-radius: 9px;
+                border-radius: 0px;
+                margin-bottom: 20px;
+                border: 1px solid #444;
             }
         </style>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -171,7 +173,7 @@ const refreshAll = () => {
         
         <div class="commentContainer"><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.gullibleComment}</div><div class="halfcomment"><i class="fa fa-user" style="padding-right: 5px;"></i>${v.skepticalComment}</div></div>
     </div>`).join("")}
-    <hr/><br/>
+    <hr/>
                         `;               
                         fetch(`/img${i}.jpg`).then(res => {
                             res.blob().then(blob => {
