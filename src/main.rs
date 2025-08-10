@@ -72,6 +72,11 @@ async fn index() -> impl Responder {
                 background-position: 150px;
                 right: 0px;
             }
+            .issue {
+                background: #222;
+                padding: 20px;
+                border-radius: 9px;
+            }
         </style>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -214,7 +219,7 @@ window.onload = () => {
             <div id="container" style>
                 <div id="leftad"></div>
                 <div id="rightad"></div>
-                <div id="issue0"></div><div id="issue1"></div><div id="issue2"></div><div id="issue3"></div><div id="issue4"></div>
+                <div class="issue" id="issue0"></div><div class="issue" id="issue1"></div><div class="issue" id="issue2"></div><div class="issue" id="issue3"></div><div class="issue" id="issue4"></div>
                 <div id="archive-link">Subscribe for access to the full historical archive.</div>
                 <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
             </div>
