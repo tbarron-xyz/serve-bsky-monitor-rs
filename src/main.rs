@@ -1,7 +1,13 @@
 #![allow(non_snake_case)]
 
+use std::sync::Arc;
+
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use redis::Commands;
+use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
+use rmcp_actix_web::StreamableHttpService;
+
+use crate::mcpservice::NewsMcpService;
 
 fn redisCon() -> Result<redis::Connection, Error> {
     let client = redis::Client::open("redis://127.0.0.1/")
@@ -306,10 +312,19 @@ async fn fakeAd() -> Result<HttpResponse> {
     return result;
 }
 
+mod mcpservice;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Running httpserver");
+
     HttpServer::new(|| {
+        let http_service = Arc::new(StreamableHttpService::new(
+            || Ok(NewsMcpService::new()),
+            LocalSessionManager::default().into(),
+            Default::default(),
+        ));
+        let http_scope = StreamableHttpService::scope(http_service);
         App::new()
             .service(index)
             .service(news)
@@ -318,6 +333,7 @@ async fn main() -> std::io::Result<()> {
             .service(grid)
             .service(fakeAd)
             .service(sections)
+            .service(web::scope("/mcp").service(http_scope))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
