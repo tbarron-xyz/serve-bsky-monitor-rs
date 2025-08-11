@@ -244,6 +244,13 @@ async fn news() -> Result<String> {
         .map(|x| format!("[{}]", x.join(",")));
 }
 
+#[get("/sections")]
+async fn sections() -> Result<String> {
+    let con = redisCon();
+    let result: Result<String> = con?.get("beats").or(Ok("".to_string()));
+    return result;
+}
+
 #[get("/time")]
 async fn time() -> Result<String> {
     let con = redisCon();
@@ -310,6 +317,7 @@ async fn main() -> std::io::Result<()> {
             .service(time)
             .service(grid)
             .service(fakeAd)
+            .service(sections)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
