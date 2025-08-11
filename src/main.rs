@@ -85,6 +85,14 @@ async fn index() -> impl Responder {
                 margin-bottom: 20px;
                 border: 1px solid #444;
             }
+            .announcement {
+                    background: #777;
+                    padding: 10px;
+                    margin: 20px;
+                    overflow: auto;
+                    display: flex;
+                    align-items: center;
+            }
         </style>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -227,6 +235,7 @@ window.onload = () => {
             <div id="container" style>
                 <div id="leftad"></div>
                 <div id="rightad"></div>
+                <div class="announcement"><img style="height: 2.5em; float: left; margin-right: 15px;" src="https://mintlify.s3.us-west-1.amazonaws.com/mcp/mcp.png"/>Browse via Model Context Protocol at <span style="margin-left:15px; font-weight: bold; font-family: monospace">https://skylines.news/mcp</span></div>
                 <div class="issue" id="issue0"></div><div class="issue" id="issue1"></div><div class="issue" id="issue2"></div><div class="issue" id="issue3"></div><div class="issue" id="issue4"></div>
                 <div id="archive-link">Subscribe for access to the full historical archive.</div>
                 <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
