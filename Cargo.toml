@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4.11.0"
 redis = "0.32.4"
-rmcp-actix-web = "0.2"
+rmcp-actix-web = "=0.2.5"
 rmcp = "0.3"
 tokio = "1.47.1"
 serde = "1.0.219"
