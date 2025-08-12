@@ -58,51 +58,12 @@ impl NewsMcpService {
         RawResource::new(uri, name.to_string()).no_annotation()
     }
 
-    #[tool(description = "Increment the counter by 1")]
-    async fn increment(&self) -> Result<CallToolResult, McpError> {
+    #[tool(description = "Express like for a news story")]
+    async fn like(&self) -> Result<CallToolResult, McpError> {
         let mut counter = self.counter.lock().await;
         *counter += 1;
         Ok(CallToolResult::success(vec![Content::text(
             counter.to_string(),
-        )]))
-    }
-
-    #[tool(description = "Decrement the counter by 1")]
-    async fn decrement(&self) -> Result<CallToolResult, McpError> {
-        let mut counter = self.counter.lock().await;
-        *counter -= 1;
-        Ok(CallToolResult::success(vec![Content::text(
-            counter.to_string(),
-        )]))
-    }
-
-    #[tool(description = "Get the current counter value")]
-    async fn get_value(&self) -> Result<CallToolResult, McpError> {
-        let counter = self.counter.lock().await;
-        Ok(CallToolResult::success(vec![Content::text(
-            counter.to_string(),
-        )]))
-    }
-
-    #[tool(description = "Say hello to the client")]
-    fn say_hello(&self) -> Result<CallToolResult, McpError> {
-        Ok(CallToolResult::success(vec![Content::text("hello")]))
-    }
-
-    #[tool(description = "Repeat what you say")]
-    fn echo(&self, Parameters(object): Parameters<JsonObject>) -> Result<CallToolResult, McpError> {
-        Ok(CallToolResult::success(vec![Content::text(
-            serde_json::Value::Object(object).to_string(),
-        )]))
-    }
-
-    #[tool(description = "Calculate the sum of two numbers")]
-    fn sum(
-        &self,
-        Parameters(StructRequest { a, b }): Parameters<StructRequest>,
-    ) -> Result<CallToolResult, McpError> {
-        Ok(CallToolResult::success(vec![Content::text(
-            (a + b).to_string(),
         )]))
     }
 }
@@ -117,7 +78,7 @@ impl ServerHandler for NewsMcpService {
                 .enable_tools()
                 .build(),
             server_info: Implementation::from_build_env(),
-            instructions: Some("This server provides a counter tool that can increment and decrement values. The counter starts at 0 and can be modified using the 'increment' and 'decrement' tools. Use 'get_value' to check the current count.".to_string()),
+            instructions: Some("This server allows the user to read the morning paper. We delivering a digital broadsheet filled with the finest news stories the world has to offer. Stay sharp and informed by reading the news at news://main .".to_string()),
         }
     }
 
@@ -128,12 +89,8 @@ impl ServerHandler for NewsMcpService {
     ) -> Result<ListResourcesResult, McpError> {
         Ok(ListResourcesResult {
             resources: vec![
-                // self._create_resource_text("str:////Users/to/some/path/", "cwd"),
-                self._create_resource_text("memo://insights", "memo-name"),
-                                self._create_resource_text("news://main", "main"),
-                                                                self._create_resource_text("news://ai", "ai"),
-
-
+                self._create_resource_text("news://main", "main"),
+                self._create_resource_text("news://ai", "ai"),
             ],
             next_cursor: None,
         })
@@ -145,19 +102,7 @@ impl ServerHandler for NewsMcpService {
         _: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResult, McpError> {
         match uri.as_str() {
-            // "str:////Users/to/some/path/" => {
-            //     let cwd = "/Users/to/some/path/";
-            //     Ok(ReadResourceResult {
-            //         contents: vec![ResourceContents::text(cwd, uri)],
-            //     })
-            // }
-            "memo://insights" => {
-                let memo = "Business Intelligence Memo\n\nAnalysis has revealed 5 key insights ...";
-                Ok(ReadResourceResult {
-                    contents: vec![ResourceContents::text(memo, uri)],
-                })
-            }
-                        "news://main" => {
+            "news://main" => {
                 let memo = "News main page";
                 Ok(ReadResourceResult {
                     contents: vec![ResourceContents::text(memo, uri)],
