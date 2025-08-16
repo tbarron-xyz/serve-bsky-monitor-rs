@@ -33,13 +33,15 @@ class Issue extends Component {
     }
 }
 
-class App extends Component {
+class MainPage extends Component {
+    state = { news: [], refresh: true };
+
     componentDidMount() {
         this.fetchNews();
     }
 
     fetchNews = () => {
-        if (document.getElementById("refresh").checked) {
+        if (this.state.refresh) {
             fetch("/news").then(res => {
                 res.json().then(list => {
                     this.setState({ news: list });
@@ -72,8 +74,11 @@ class App extends Component {
 
         setTimeout(this.fetchNews, 5000);
     }
-    
-    render({ page }, { news: issues = [] }) {
+
+    toggleRefresh = () =>
+		this.setState({ refresh: !this.state.refresh });
+
+    render({}, { news = [] }) {
         return html`
             <div id="left-container">
                 <div id="container" style>
@@ -82,31 +87,43 @@ class App extends Component {
                     <div class="announcement">
                         <img style="height: 2.5em; float: left; margin-right: 15px;" src="https://mintlify.s3.us-west-1.amazonaws.com/mcp/mcp.png"/>Browse via Model Context Protocol at <span style="margin-left:15px; font-weight: bold; font-family: monospace">https://skylines.news/mcp</span>
                     </div>
-            ${issues.map((issue, i) => html`
-                <${Issue} issue=${issue} i=${i}></$>
-            `)}            <div id="archive-link">Subscribe for access to the full historical archive.</div>
+                    ${news.map((issue, i) => html`
+                        <${Issue} issue=${issue} i=${i}></$>
+                    `)}            
+                    <div id="archive-link">Subscribe for access to the full historical archive.</div>
                     <i class="fa fa-refresh"></i><input checked type="checkbox" id="refresh"/>
                 </div>
             </div>
             <div id="right-container">
                 <div id="messages"></div>
-                <i class="fa fa-refresh"></i><input type="checkbox" checked id="messagesRefresh"/>
-            </div>`;
+                <i class="fa fa-refresh"></i><input type="checkbox" checked id="messagesRefresh" onInput={this.toggleRefresh}/>
+            </div>`
     }
 }
 
-const Header = ({ name }) => html`<h1>${name} List</h1>`
+class NewsroomPage extends Component {
+    render(){return html``}
+}
 
-const Footer = props => html`<footer ...${props} />`
+class App extends Component {
+    componentDidMount() {
+        this.setState({ page: 
+                window.location.hash == "#newsroom" ? "newsroom" :
+                "main"
+            });
+    }
 
-render(html`<${App} page="All" />`, document.getElementById("preact-app"));
-
+    render({}, { page = "main" }) {
+        return page == "main" ? html`<${MainPage}></$>` : 
+            page == "newsroom" ? html`<${NewsroomPage}></$>` : html``;
+    }
+}
             
 const jetstream = new Jetstream();
 
 const last100 = [];
 jetstream.onCreate("app.bsky.feed.post", event => {
-    if (document.getElementById("messagesRefresh").checked) {
+    if (document.getElementById("messagesRefresh") && document.getElementById("messagesRefresh").checked) {
         const t = event.detail.commit.record.text;
         last100.unshift(t);
         if (last100.length > 100) last100.pop();
@@ -116,14 +133,8 @@ jetstream.onCreate("app.bsky.feed.post", event => {
 
 jetstream.start();
 
-
-
-const refreshAll = () => {
-
-};
-
-
 window.onload = () => {
+    console.log("onload");
     localStorage.setItem("state","");
-    refreshAll();
+    render(html`<${App}/>`, document.getElementById("preact-app"));
 };
