@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use actix_files;
+use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use redis::Commands;
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::StreamableHttpService;
