@@ -102,15 +102,16 @@ class MainPage extends Component {
 }
 
 class NewsroomPage extends Component {
-    render(){return html``}
+    render(){return html`Newsroom`}
 }
 
 class App extends Component {
-    componentDidMount() {
-        this.setState({ page: 
+    constructor() {
+        super();
+        this.state = { page: 
                 window.location.hash == "#newsroom" ? "newsroom" :
                 "main"
-            });
+            };
     }
 
     render({}, { page = "main" }) {
