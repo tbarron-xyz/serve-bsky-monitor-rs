@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
+use actix_files;
 use redis::Commands;
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::StreamableHttpService;
@@ -22,7 +23,7 @@ fn redisCon() -> Result<redis::Connection, Error> {
 async fn index() -> impl Responder {
     HttpResponse::Ok()
         .content_type("text/html")
-        .body(include_str!("index.html"))
+        .body(include_str!("../static/index.html"))
     //        Maybe later... <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 }
 
@@ -121,6 +122,7 @@ async fn main() -> std::io::Result<()> {
             .service(fakeAd)
             .service(sections)
             .service(web::scope("/mcp").service(http_scope))
+            .service(actix_files::Files::new("/", "./static"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
