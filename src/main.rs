@@ -3,10 +3,17 @@
 use std::sync::Arc;
 
 use actix_files;
+use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
+use actix_jwt_auth_middleware::{AuthResult, Authority, FromRequest, TokenSigner};
+use actix_web::cookie::time::Duration;
+use actix_web::cookie::Cookie;
 use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
+use ed25519_compact::KeyPair;
+use jwt_compact::alg::Ed25519;
 use redis::Commands;
 use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
 use rmcp_actix_web::StreamableHttpService;
+use serde::{Deserialize, Serialize};
 
 use crate::mcpservice::NewsMcpService;
 
@@ -100,13 +107,66 @@ async fn fakeAd() -> Result<HttpResponse> {
     return result;
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, FromRequest)]
+struct User {
+    id: u32,
+}
+
+#[get("/login")]
+async fn login(token_signer: web::Data<TokenSigner<User, Ed25519>>) -> AuthResult<HttpResponse> {
+    let user = User { id: 1 };
+    Ok(HttpResponse::Ok()
+        .cookie(token_signer.create_access_cookie(&user)?)
+        .cookie(token_signer.create_refresh_cookie(&user)?)
+        .body("You are now logged in"))
+}
+
+#[get("/logout")]
+async fn logout() -> AuthResult<HttpResponse> {
+    Ok(HttpResponse::Ok()
+        .cookie(
+            Cookie::build("access_token", "")
+                .path("/")
+                .max_age(Duration::new(-1, 0))
+                .finish(),
+        )
+        .cookie(
+            Cookie::build("refresh_token", "")
+                .path("/")
+                .max_age(Duration::new(-1, 0))
+                .finish(),
+        )
+        .body("You are now logged out"))
+}
+
+#[get("/hello")]
+async fn hello(user: User) -> impl Responder {
+    format!("Hello there, i see your user id is {}.", user.id)
+}
+
 mod mcpservice;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Running httpserver");
+    let KeyPair {
+        pk: public_key,
+        sk: secret_key,
+    } = KeyPair::generate();
+    HttpServer::new(move || {
+        let authority = Authority::<User, Ed25519, _, _>::new()
+            .refresh_authorizer(|| async move { Ok(()) })
+            .token_signer(Some(
+                TokenSigner::new()
+                    .signing_key(secret_key.clone())
+                    .algorithm(Ed25519)
+                    .build()
+                    .expect(""),
+            ))
+            .verifying_key(public_key)
+            .build()
+            .expect("");
 
-    HttpServer::new(|| {
         let http_service = Arc::new(StreamableHttpService::new(
             || Ok(NewsMcpService::new()),
             LocalSessionManager::default().into(),
@@ -122,7 +182,10 @@ async fn main() -> std::io::Result<()> {
             .service(fakeAd)
             .service(sections)
             .service(web::scope("/mcp").service(http_scope))
-            .service(actix_files::Files::new("/", "./static"))
+            .service(login)
+            .service(logout)
+            .use_jwt(authority, web::scope("").service(hello))
+            .service(actix_files::Files::new("/", "./static")) // this must come last as it's a catch-all
     })
     .bind(("127.0.0.1", 8080))?
     .run()
