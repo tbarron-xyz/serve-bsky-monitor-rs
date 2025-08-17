@@ -75,17 +75,19 @@ class MainPage extends Component {
         setTimeout(this.fetchNews, 5000);
     }
 
-    toggleRefresh = () =>
-		this.setState({ refresh: !this.state.refresh });
+    toggleRefresh = () => this.setState({ refresh: !this.state.refresh });
 
     render({}, { news = [] }) {
         return html`
             <div id="left-container">
-                <div id="container" style>
+                <div class="container" style>
                     <div id="leftad"></div>
                     <div id="rightad"></div>
+                    <${TopNav} />
                     <div class="announcement">
-                        <img style="height: 2.5em; float: left; margin-right: 15px;" src="https://mintlify.s3.us-west-1.amazonaws.com/mcp/mcp.png"/>Browse via Model Context Protocol at <span style="margin-left:15px; font-weight: bold; font-family: monospace">https://skylines.news/mcp</span>
+                        <img style="height: 2.5em; float: left; margin-right: 15px;" src="https://mintlify.s3.us-west-1.amazonaws.com/mcp/mcp.png"/>
+                        Browse via Model Context Protocol at 
+                        <span style="margin-left:15px; font-weight: bold; font-family: monospace">https://skylines.news/mcp</span>
                     </div>
                     ${news.map((issue, i) => html`
                         <${Issue} issue=${issue} i=${i}></$>
@@ -101,22 +103,64 @@ class MainPage extends Component {
     }
 }
 
+class LoginPage extends Component {
+    render() {return html`<div class="container">
+        <${TopNav} />
+        <div>
+            <input type="text" onInput="" />
+            <input type="password" onInput="" />
+            <input type="button">Login</input>
+        </div>
+    </div>`}
+}
+
+class TopNav extends Component {
+    render() { return html`<div class="topnav">
+                        <a href="#">front page</a> <!-- |  <a href="#newsroom">newsroom</a> --> | <a href="#login">login</a>
+                    </div>`
+    }
+}
+
 class NewsroomPage extends Component {
     render(){return html`Newsroom`}
 }
+
+import { HashRouter } from './preactStandaloneRouter.js';
+
+// class HashRouter extends Component {
+//     constructor() {
+//         super();
+//         this.state = { hash: window.location.hash };
+//         addEventListener("hashchange", (event) => {
+//             this.setState({ hash: window.location.hash });
+//         });
+//     }
+//     render({ children, no_match }, { hash }) {
+//         if (!Array.isArray(children)) { children = [ children ]; }  // preact children is just an object if only one child given
+//         // const hash = window.location.hash;
+//         const query = new URLSearchParams(window.location.search);
+//         const el = children.find(x => `#${x.props.path}` == hash || x.props.path == hash);
+//         return html`${el ? el : no_match()}`;
+//     }
+// }
 
 class App extends Component {
     constructor() {
         super();
         this.state = { page: 
                 window.location.hash == "#newsroom" ? "newsroom" :
+                window.location.hash == "#login" ? "login" :
                 "main"
             };
     }
 
     render({}, { page = "main" }) {
-        return page == "main" ? html`<${MainPage}></$>` : 
-            page == "newsroom" ? html`<${NewsroomPage}></$>` : html``;
+        return html`
+        <${HashRouter}>
+            <${MainPage} path=""/>
+            <${NewsroomPage} path="newsroom"/>
+            <${LoginPage} path="login"/>
+        </$>`
     }
 }
             
