@@ -4,10 +4,11 @@ use std::sync::Arc;
 
 use actix_files;
 use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
-use actix_jwt_auth_middleware::{AuthResult, Authority, FromRequest, TokenSigner};
+use actix_jwt_auth_middleware::{AuthError, AuthResult, Authority, FromRequest, TokenSigner};
 use actix_web::cookie::time::Duration;
 use actix_web::cookie::Cookie;
-use actix_web::{error, get, web, App, Error, HttpResponse, HttpServer, Responder, Result};
+use actix_web::web::{Form, Json};
+use actix_web::{error, get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result};
 use ed25519_compact::KeyPair;
 use jwt_compact::alg::Ed25519;
 use redis::Commands;
@@ -112,13 +113,37 @@ struct User {
     id: u32,
 }
 
-#[get("/login")]
-async fn login(token_signer: web::Data<TokenSigner<User, Ed25519>>) -> AuthResult<HttpResponse> {
+#[derive(Deserialize)]
+struct LoginStruct {
+    username: String,
+    password: String,
+}
+
+#[post("/login")]
+async fn login(
+    data: Json<LoginStruct>,
+    token_signer: web::Data<TokenSigner<User, Ed25519>>,
+) -> AuthResult<HttpResponse> {
+    let mut redisPwd = redisCon().or(Err(
+        HttpResponse::InternalServerError().body("redis con fail")
+    ));
+    if redisPwd.is_err() {
+        return Ok(redisPwd.err().unwrap());
+    }
+    let pwd: Result<String> = redisPwd
+        .unwrap()
+        .get("admin_password")
+        .or(Ok("admin".to_string()));
     let user = User { id: 1 };
-    Ok(HttpResponse::Ok()
-        .cookie(token_signer.create_access_cookie(&user)?)
-        .cookie(token_signer.create_refresh_cookie(&user)?)
-        .body("You are now logged in"))
+    let inner = data.into_inner();
+    if (inner.username == "admin" && inner.password == pwd.unwrap()) {
+        return Ok(HttpResponse::Ok()
+            .cookie(token_signer.create_access_cookie(&user)?)
+            .cookie(token_signer.create_refresh_cookie(&user)?)
+            .body("You are now logged in"));
+    } else {
+        return Ok(HttpResponse::BadRequest().body("No"));
+    }
 }
 
 #[get("/logout")]
@@ -184,8 +209,8 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/mcp").service(http_scope))
             .service(login)
             .service(logout)
-            .use_jwt(authority, web::scope("").service(hello))
             .service(actix_files::Files::new("/", "./static")) // this must come last as it's a catch-all
+            .use_jwt(authority, web::scope("").service(hello))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

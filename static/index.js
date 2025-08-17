@@ -104,12 +104,17 @@ class MainPage extends Component {
 }
 
 class LoginPage extends Component {
-    render() {return html`<div class="container">
+    state = { username: "", password: "" };
+    onclick = () => {
+        fetch("/login", { headers: new Headers({'content-type': 'application/json'}), method: 'POST', body: JSON.stringify(this.state) })
+        .then(res => res.text().then(t => console.log(t)))
+    }
+    render({}, {}) {return html`<div class="container">
         <${TopNav} />
         <div>
-            <input type="text" onInput="" />
-            <input type="password" onInput="" />
-            <input type="button">Login</input>
+            <input type="text" onInput=${e => this.setState({ username: e.target.value })} />
+            <input type="password" onInput=${e => this.setState({ password: e.target.value })} />
+            <input type="button" onclick=${this.onclick}>Login</input>
         </div>
     </div>`}
 }
