@@ -1,5 +1,5 @@
 import { html, Component, render } from 'https://unpkg.com/htm/preact/standalone.module.js';
-import { Jetstream } from './jetstream.js';
+import { TinyJetstream as Jetstream } from 'https://cdn.jsdelivr.net/npm/mjbc@latest/tinyjetstream.js'
 
 class Issue extends Component {
     render({ issue, i }) {
@@ -167,9 +167,9 @@ class App extends Component {
 const jetstream = new Jetstream();
 
 const last100 = [];
-jetstream.onCreate("app.bsky.feed.post", event => {
+jetstream.onTweet = (event => {
     if (document.getElementById("messagesRefresh") && document.getElementById("messagesRefresh").checked) {
-        const t = event.detail.commit.record.text;
+        const t = event.commit.record.text;
         last100.unshift(t);
         if (last100.length > 100) last100.pop();
         document.getElementById("messages").textContent = last100.join("\n");
